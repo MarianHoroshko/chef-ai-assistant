@@ -1,9 +1,11 @@
+import { QdrantClient } from '@qdrant/js-client-rest';
 import Groq from 'groq-sdk';
 import {
   ChatCompletion,
   ChatCompletionCreateParams,
   ChatCompletionMessageParam,
 } from 'groq-sdk/resources/chat/completions';
+import { getVector } from '../services/embeddingService';
 
 /**
  * @class GroqApiWrapper
@@ -55,6 +57,61 @@ export class GroqApiWrapper {
 
       // Re-throw a generic error or a custom application error
       throw new Error('Failed to generate chat completion from Groq API.');
+    }
+  }
+}
+
+export class QdrantWrapper {
+  private qdrantClient: QdrantClient;
+  private collectionName: string;
+
+  constructor() {
+    if (!process.env.QDRANT_API_KEY) {
+      console.warn(
+        'QDRANT_API_KEY not found. Ensure it is set in environment or passed to the constructor.',
+      );
+    }
+
+    if (!process.env.QDRANT_COLLECTION) {
+      console.warn(
+        'QDRANT_COLLECTION not found. Ensure it is set in environment or passed to the constructor.',
+      );
+    }
+
+    this.qdrantClient = new QdrantClient({
+      url: process.env.QDRANT_URL,
+      apiKey: process.env.QDRANT_API_KEY,
+    });
+
+    this.collectionName = process.env.QDRANT_COLLECTION || 'collection';
+    this.ensureCollection();
+  }
+
+  public async buildContext(query: string) {
+    const queryVector = await getVector(query);
+    const searchResults = await this.qdrantClient.search(this.collectionName, {
+      vector: queryVector,
+      limit: 3, // Get top 3 most relevant chunks
+    });
+
+    // 2. Build Context from Search Results
+    const context = searchResults
+      .map((result) => result.payload?.content)
+      .filter(Boolean)
+      .join('\n---\n');
+
+    return context;
+  }
+
+  private async ensureCollection() {
+    const collections = await this.qdrantClient.getCollections();
+    const exists = collections.collections.some((c) => c.name === this.collectionName);
+
+    if (!exists) {
+      console.log(`Creating collection: ${this.collectionName}`);
+      await this.qdrantClient.createCollection(this.collectionName, {
+        vectors: { size: 384, distance: 'Cosine' }, // 384 is the dim size of MiniLM-L6
+      });
     }
   }
 }

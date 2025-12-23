@@ -1,9 +1,10 @@
 import { ChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
-import { GroqApiWrapper } from '../infra/aiClient';
+import { GroqApiWrapper, QdrantWrapper } from '../infra/aiClient';
 import z from 'zod';
 import { INITIAL_NOTE_BASE_PROMPT, REFINE_NOTE_BASE_PROMPT } from '../agents/chefAgent';
 
 const groqInstance = new GroqApiWrapper();
+const qdrantInstance = new QdrantWrapper();
 
 export type SendMessageToModelArguments = {
   systemMessage: string;
@@ -35,10 +36,20 @@ export const generateInitialNote = async (conversation: SendMessageToModelArgume
     },
   ]);
 
+  const dataForContextQuery = conversation
+    .map((item) => 'system message:' + item.systemMessage + ' user message:' + item.userMessage)
+    .join(' ');
+
+  const context = await qdrantInstance.buildContext(dataForContextQuery);
+
   const messages: ChatCompletionMessageParam[] = [
     {
       role: 'system',
       content: INITIAL_NOTE_BASE_PROMPT,
+    },
+    {
+      role: 'system',
+      content: 'Context information to assist you: ```' + context + '```',
     },
     ...conversationMessages,
   ];
@@ -46,7 +57,7 @@ export const generateInitialNote = async (conversation: SendMessageToModelArgume
   return sendMessageToModel(messages);
 };
 
-export const generateRefinedNote = (
+export const generateRefinedNote = async (
   conversation: SendMessageToModelArguments[],
   lastNote: string,
 ) => {
@@ -61,10 +72,20 @@ export const generateRefinedNote = (
     },
   ]);
 
+  const dataForContextQuery = conversation
+    .map((item) => 'system message:' + item.systemMessage + ' user message:' + item.userMessage)
+    .join(' ');
+
+  const context = await qdrantInstance.buildContext(dataForContextQuery);
+
   const messages: ChatCompletionMessageParam[] = [
     {
       role: 'system',
       content: REFINE_NOTE_BASE_PROMPT,
+    },
+    {
+      role: 'system',
+      content: 'Context information to assist you: ```' + context + '```',
     },
     {
       role: 'system',
@@ -86,6 +107,7 @@ const sendMessageToModel = async (conversationTranscription: ChatCompletionMessa
 
     console.log('\n✅ Groq API Success!');
     console.log(`Model Used: ${modelResponse.model}`);
+    console.log(`Request data: ${conversationTranscription}`);
     console.log(`Assistant's Response:\n---`);
     console.log(responseRawJSON);
     console.log(`---`);

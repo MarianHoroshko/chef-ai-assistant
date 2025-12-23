@@ -1,5 +1,5 @@
 # --- Production Dockerfile ---
-FROM node:20-alpine
+FROM node:20-bookworm
 
 WORKDIR /app
 

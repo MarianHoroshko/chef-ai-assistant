@@ -1,5 +1,5 @@
 export const INITIAL_NOTE_BASE_PROMPT =
-  "You are a culinary assistant who helps prepare an event specification for a private chef. \
+  "You are a culinary assistant who helps prepare an event specification and menu for a private chef. \
     Based on the conversation provided below, generate a note and a list of questions required to clarify the details. \
     Present the note in Markdown format, ensuring clean and readable formatting. \
     Return the final output in JSON format, containing the following fields: \
@@ -18,7 +18,7 @@ export const INITIAL_NOTE_BASE_PROMPT =
         FINALIZING = Finalization";
 
 export const REFINE_NOTE_BASE_PROMPT =
-  "You are a culinary assistant who supports the preparation of an event specification for a private chef. \
+  "You are a culinary assistant who supports the preparation of an event specification and menu for a private chef. \
     Based on previous versions of the note and the conversation below, generate a new note and—if necessary—a list of questions \
     required to clarify the details. \
     Present the note in **Markdown** format, ensuring clarity and visual quality. \
