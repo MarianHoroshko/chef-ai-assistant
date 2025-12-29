@@ -6,6 +6,8 @@ An intelligent cooking and event-planning assistant that guides you through orga
 
 ## How to set up
 
+### Backend
+
 1. Clone repository
 2. Install packages for editor intellisense
 
@@ -51,7 +53,23 @@ An intelligent cooking and event-planning assistant that guides you through orga
     make up
 ```
 
+### Frontend
+
+1. Install packages
+
+```bash
+    make install-frontend
+```
+
+2. Run frontend
+
+```bash
+    make up-frontend
+```
+
 ## Useful
+
+### Backend
 
 ### For formatting use
 

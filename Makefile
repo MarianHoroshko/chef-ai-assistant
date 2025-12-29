@@ -1,6 +1,10 @@
 APP_NAME = express-ts-app
 
 # -----------------------------
+# Backend
+# -----------------------------
+
+# -----------------------------
 # Docker (Development)
 # -----------------------------
 build:
@@ -56,3 +60,13 @@ test-api:
 # -----------------------------
 fill-vector-db:
 	python .\scripts\fill_db_with_data_for_RAG.py
+
+
+# -----------------------------
+# Frontend
+# -----------------------------
+install-frontend:
+	cd frontend && npm install
+
+up-frontend:
+	cd frontend && npm run dev
