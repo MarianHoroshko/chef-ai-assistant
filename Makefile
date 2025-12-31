@@ -8,28 +8,28 @@ APP_NAME = express-ts-app
 # Docker (Development)
 # -----------------------------
 build:
-	docker-compose build
+	cd backend && docker-compose build
 
 up:
-	docker-compose up --build
+	cd backend && docker-compose up
 
 down:
-	docker-compose down
+	cd backend && docker-compose down
 
 logs:
-	docker logs -f express-ts-api
+	cd backend && docker logs -f express-ts-api
 
 # -----------------------------
 # Docker (Production)
 # -----------------------------
 prod-build:
-	docker build -t $(APP_NAME) -f Dockerfile .
+	cd backend && docker build -t $(APP_NAME) -f Dockerfile .
 
 prod-run:
-	docker run -p 3000:3000 $(APP_NAME)
+	cd backend && docker run -p 3000:3000 $(APP_NAME)
 
 prod-shell:
-	docker run -it $(APP_NAME) sh
+	cd backend && docker run -it $(APP_NAME) sh
 
 # -----------------------------
 # Utility
@@ -41,25 +41,25 @@ info:
 	@docker images | grep $(APP_NAME)
 
 format:
-	npx prettier --write "src/**/*.{ts,js}"
+	cd backend && npx prettier --write "src/**/*.{ts,js}"
 
 lint:
-	npm run lint
+	cd backend && npm run lint
 
 lint-fix:
-	npm run lint:fix
+	cd backend && npm run lint:fix
 
 # -----------------------------
 # Test
 # -----------------------------
 test-api:
-	python .\scripts\test_api_script.py 
+	python .\backend\scripts\test_api_script.py 
 
 # -----------------------------
 # Fill vector DB
 # -----------------------------
 fill-vector-db:
-	python .\scripts\fill_db_with_data_for_RAG.py
+	python .\backend\scripts\fill_db_with_data_for_RAG.py
 
 
 # -----------------------------

@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import z from 'zod';
 import { getSessionById, SessionState, updateSessionData } from '../services/sessionService';
 import { validate } from '../middlewares/validation';
+import { INTERVIEW_QUESTIONS } from '../agents/chefAgent';
 
 const router = Router();
 
@@ -72,6 +73,28 @@ router.post('/step', validate(stepSchema), (req: Request, res: Response) => {
   updateSessionData(reqBody.sessionId, session);
 
   return res.json({ status: 'ok' });
+});
+
+/**
+ * @openapi
+ *
+ * /form/get-questions:
+ *   get:
+ *     summary: Returns list of interview questions
+ *     description: Returns list of interview questions
+ *     tags: [Form]
+ *     responses:
+ *       200:
+ *         description: return questions
+ */
+router.get('/get-questions', (req: Request, res: Response) => {
+  const arrayOfQuestions = Object.keys(INTERVIEW_QUESTIONS).map((key) => ({
+    ...INTERVIEW_QUESTIONS[key as keyof typeof INTERVIEW_QUESTIONS],
+  }));
+
+  return res.json({
+    questions: arrayOfQuestions,
+  });
 });
 
 export default router;
