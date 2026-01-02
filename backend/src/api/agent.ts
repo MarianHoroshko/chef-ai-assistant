@@ -198,53 +198,63 @@ router.post('/refine', validate(bodySchema), async (req: Request, res: Response)
  *         description: validation error
  */
 router.post('/generate-pdf', async (req: Request, res: Response) => {
-  const initial: Body = req;
-  const reqBody = initial.body;
+  const { sessionId } = req.body; // Cleaner destructuring
 
-  const session = getSessionById(reqBody.sessionId);
-  if (!session) return res.status(404).json({ err: 404, message: 'Session not found.' });
+  const session = getSessionById(sessionId);
+  if (!session) {
+    return res.status(404).json({ err: 404, message: 'Session not found.' });
+  }
 
   const lastModelResponse = session.history[session.history.length - 1];
-  const noteInHTML = lastModelResponse.note;
+  const noteInHTML = lastModelResponse?.html;
+
+  if (!noteInHTML) {
+    return res.status(400).json({ err: 400, message: 'No content to generate PDF.' });
+  }
 
   let browser: Browser | null = null;
+
   try {
     browser = await puppeteer.launch({
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       headless: true,
-      // 'no-sandbox' is often required if running inside Docker
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'], // Added shm usage for Docker
     });
 
     const page = await browser.newPage();
 
-    // waitUntil: 'networkidle0' ensures external assets (images/css) load
-    await page.setContent(noteInHTML, { waitUntil: 'networkidle0' });
+    // 1. Set content with a timeout to prevent hanging
+    await page.setContent(noteInHTML, {
+      waitUntil: 'networkidle0',
+      timeout: 30000,
+    });
 
+    // 2. Generate Buffer
     const pdfBuffer = await page.pdf({
       format: 'A4',
-      printBackground: true, // Printing CSS backgrounds
-      margin: {
-        top: '20px',
-        bottom: '20px',
-        left: '20px',
-        right: '20px',
-      },
+      printBackground: true,
+      margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' },
     });
 
-    res.set({
+    // 3. Clear any existing headers and set explicitly
+    res.writeHead(200, {
       'Content-Type': 'application/pdf',
-      'Content-Length': pdfBuffer.length.toString(),
       'Content-Disposition': 'attachment; filename="generated_note.pdf"',
+      'Content-Length': pdfBuffer.length,
     });
 
-    return res.send(pdfBuffer);
+    // 4. Use end() to send the buffer directly
+    return res.end(pdfBuffer);
   } catch (error) {
     console.error('PDF Generation Error:', error);
-
-    return res.status(500).send('Failed to generate PDF');
+    // Ensure we only send one response
+    if (!res.headersSent) {
+      return res.status(500).json({ error: 'Failed to generate PDF' });
+    }
   } finally {
-    if (browser) await browser.close();
+    if (browser) {
+      await browser.close();
+    }
   }
 });
 

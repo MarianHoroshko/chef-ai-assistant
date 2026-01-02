@@ -46,16 +46,14 @@ OUTPUT FORMAT RULES (STRICT ENFORCEMENT) \
    - DO NOT wrap the JSON in markdown code blocks (e.g., no ```json). \
    - DO NOT include any introductory or concluding text. \
    - The response must start with { and end with }. \
-\
-2. IF HTML OR PDF IS REQUESTED: \
-   - Output MUST be a single, valid HTML5 document. \
-   - DO NOT wrap the HTML in markdown code blocks (e.g., no ```html). \
-   - DO NOT include any introductory or concluding text. \
-   - The response must start with <!DOCTYPE html> or <html> and end with </html>. \
+   - The value of "html" MUST be a string containing a complete HTML5 document. \
+   - The HTML MUST start with <!DOCTYPE html> or <html> and end with </html>. \
+   - All HTML must be JSON-escaped (e.g., "<" → "<", quotes escaped). \
+   - DO NOT wrap the output in markdown code blocks. \
+   - DO NOT include any text outside the JSON object. \
 \
 3. ABSOLUTE NEGATIVE CONSTRAINTS: \
    - Never include "Here is the result:" or any conversational filler. \
-   - Never provide both JSON and HTML in the same response. \
    - Never use Markdown formatting outside of the JSON "note" field string. \
 \
 ──────────────────────────────────────── \
@@ -64,6 +62,7 @@ JSON OUTPUT SCHEMA (default) \
 \
 { \
   "note": "<Markdown-formatted event note>", \
+  "html": "<HTML-formatted event note>",\
   "questions": [ \
     { \
       "id": "question_id (snake_case)", \
@@ -96,7 +95,7 @@ QUESTION CATEGORIES \
 - FINALIZING \
 \
 ──────────────────────────────────────── \
-HTML STRUCTURE REQUIREMENTS (when HTML is requested) \
+HTML STRUCTURE REQUIREMENTS \
 ──────────────────────────────────────── \
 \
 The HTML document MUST include: \
@@ -335,10 +334,5 @@ export const INTERVIEW_QUESTIONS: Record<string, QuestionDefinition> = {
     id: 'event_personalization',
     text: 'Does the client want any personalization elements? (e.g. a menu with a dedication, birthday wishes in the dessert)',
     category: QuestionCategory.SPECIALS,
-  },
-  generate_note_file: {
-    id: 'generate_note_file',
-    text: 'Does the client need a full PDF/HTML specification?',
-    category: QuestionCategory.FINALIZING,
   },
 };

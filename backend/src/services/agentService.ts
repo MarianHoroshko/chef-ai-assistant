@@ -27,6 +27,7 @@ export const modelResponseSchema = z.object({
       rationale: z.string(),
     }),
   ),
+  html: z.string(),
 });
 
 export type ModelResponse = z.infer<typeof modelResponseSchema>;
