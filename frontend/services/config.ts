@@ -10,6 +10,7 @@ export const apiUrls = {
   },
   agent: {
     initialNote: `${apiURL}/agent/initial`,
+    refineNote: `${apiURL}/agent/refine`,
     generateNotePdf: `${apiURL}/agent/generate-pdf`,
   },
 };
