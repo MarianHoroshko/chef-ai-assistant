@@ -77,6 +77,11 @@ router.post('/initial', validate(bodySchema), async (req: Request, res: Response
   session.state = SessionState.PENDING;
   session.history = [...session.history, modelResponse];
 
+  session.state =
+    modelResponse.questions && modelResponse.questions.length > 0
+      ? SessionState.PENDING
+      : SessionState.COMPLETE;
+
   updateSessionData(reqBody.sessionId, session);
 
   return res.json({
@@ -153,16 +158,9 @@ router.post('/refine', validate(bodySchema), async (req: Request, res: Response)
 
   updateSessionData(reqBody.sessionId, session);
 
-  if (modelResponse.questions && modelResponse.questions.length > 0)
-    return res.json({
-      summary: modelResponse.note,
-      questions: modelResponse.questions,
-      suggested_dishes: modelResponse?.suggested_dishes,
-      state: session.state,
-    });
-
   return res.json({
     summary: modelResponse.note,
+    questions: modelResponse.questions,
     suggested_dishes: modelResponse?.suggested_dishes,
     state: session.state,
   });
