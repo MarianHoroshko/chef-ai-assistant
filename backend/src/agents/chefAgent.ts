@@ -363,6 +363,7 @@ OUTPUT FORMAT RULES (STRICT)
 ────────────────────────────────────────
 
 - Output MUST be a single valid JSON object
+- DO NOT wrap the JSON in markdown code blocks (e.g., no \`\`\`json).
 - Do NOT wrap the output in markdown or code fences
 - Do NOT include any text outside the JSON object
 - The response MUST start with { and end with }
