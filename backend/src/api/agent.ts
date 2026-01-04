@@ -88,7 +88,7 @@ router.post(
 
       updateSessionData(reqBody.sessionId, session);
 
-      return res.json({
+      res.json({
         summary: modelResponse?.note,
         questions: modelResponse?.questions,
         suggested_dishes: modelResponse?.suggested_dishes,
@@ -169,7 +169,7 @@ router.post(
 
       updateSessionData(reqBody.sessionId, session);
 
-      return res.json({
+      res.json({
         summary: modelResponse.note,
         questions: modelResponse.questions,
         suggested_dishes: modelResponse?.suggested_dishes,
@@ -250,10 +250,12 @@ router.post('/generate-pdf', async (req: Request, res: Response, next: NextFunct
         'Content-Length': pdfBuffer.length,
       });
 
-      return res.end(pdfBuffer);
-    } catch (error) {
+      res.end(pdfBuffer);
+    } catch (error: unknown) {
       console.error('PDF Generation Error:', error);
-      throw new AppError(500, (error.message ?? 'Error occurred') || 'Failed to generate PDF');
+
+      const message = error instanceof Error ? error.message : 'Failed to generate PDF';
+      throw new AppError(500, (message ?? 'Error occurred') || 'Failed to generate PDF');
     } finally {
       if (browser) await browser.close();
     }

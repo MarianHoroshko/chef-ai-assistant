@@ -77,7 +77,7 @@ router.post(
 
       updateSessionData(reqBody.sessionId, session);
 
-      return res.json({ status: 'ok' });
+      res.json({ status: 'ok' });
     } catch (error) {
       next(error);
     }
@@ -102,7 +102,7 @@ router.get('/get-questions', async (req: Request, res: Response, next: NextFunct
       ...INTERVIEW_QUESTIONS[key as keyof typeof INTERVIEW_QUESTIONS],
     }));
 
-    return res.json({
+    res.json({
       questions: arrayOfQuestions,
     });
   } catch (error) {

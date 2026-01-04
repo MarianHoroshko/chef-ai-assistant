@@ -14,6 +14,8 @@
     "forceConsistentCasingInFileNames": true /* Ensure file casing consistency */,
     "noImplicitReturns": true /* Error on code paths that don't return a value */,
     "noFallthroughCasesInSwitch": true /* Error on non-handled cases in switch statements */,
+    "skipLibCheck": true,
+    "types": ["node", "express"],
 
     /* Module Interoperability */
     "esModuleInterop": true /* Allow default imports from modules with no default export */,
