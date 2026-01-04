@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(
   cors({
-    origin: 'http://localhost:3001',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true, // Required if you are sending cookies/sessions
