@@ -1,3 +1,5 @@
+'use client';
+
 import { Box } from '@/components/ui/box';
 import { Button, ButtonIcon } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -5,10 +7,10 @@ import { ArrowUpIcon } from '@/components/ui/icon';
 import { Input, InputField } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { FC } from 'react';
-import { ConversationItem } from '../../page';
 import { useMutation } from '@tanstack/react-query';
 import { sendQuestionAnswer } from '@/services/form';
 import { useForm, Controller } from 'react-hook-form';
+import { ConversationItem } from '../../hooks/useChatSession';
 
 type InputAreaProps = {
   questionId: string;

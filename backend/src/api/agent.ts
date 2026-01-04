@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import z from 'zod';
 import { validate } from '../middlewares/validation';
 import { getSessionById, SessionState, updateSessionData } from '../services/sessionService';
@@ -9,6 +9,7 @@ import {
 } from '../services/agentService';
 import { INTERVIEW_QUESTIONS } from '../agents/chefAgent';
 import puppeteer, { Browser } from 'puppeteer';
+import { AppError } from '../utils/errors';
 
 const router = Router();
 
@@ -49,48 +50,55 @@ type Body = z.infer<typeof bodySchema>;
  *       400:
  *         description: validation error
  */
-router.post('/initial', validate(bodySchema), async (req: Request, res: Response) => {
-  const initial: Body = req;
-  const reqBody = initial.body;
+router.post(
+  '/initial',
+  validate(bodySchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const initial: Body = req;
+      const reqBody = initial.body;
 
-  const session = getSessionById(reqBody.sessionId);
-  if (!session) return res.status(404).json({ err: 404, message: 'Session not found.' });
+      const session = getSessionById(reqBody.sessionId);
+      if (!session) throw new AppError(404, 'Session not found.');
 
-  // prepare conversation to be used by model
-  const conversation: SendMessageToModelArguments[] =
-    session?.formData.flatMap((item) => {
-      const question = INTERVIEW_QUESTIONS[item.questionId];
+      // prepare conversation to be used by model
+      const conversation: SendMessageToModelArguments[] =
+        session?.formData.flatMap((item) => {
+          const question = INTERVIEW_QUESTIONS[item.questionId];
 
-      return {
-        systemMessage: `System question: ${question.text}. Question category: ${question.category}`,
-        userMessage: item.userAnswer,
-      };
-    }) ?? [];
+          return {
+            systemMessage: `System question: ${question.text}. Question category: ${question.category} `,
+            userMessage: item.userAnswer,
+          };
+        }) ?? [];
 
-  // generate note and questions
-  const modelResponse = await generateInitialNote(conversation);
-  if (!modelResponse)
-    return res.status(500).json({ err: 500, message: 'Something went wrong on the server.' });
+      // generate note and questions
+      const modelResponse = await generateInitialNote(conversation);
+      if (!modelResponse) throw new AppError(500, 'Something went wrong on the server.');
 
-  // update session
-  session.summary = { note: modelResponse?.note ?? '' };
-  session.state = SessionState.PENDING;
-  session.history = [...session.history, modelResponse];
+      // update session
+      session.summary = { note: modelResponse?.note ?? '' };
+      session.state = SessionState.PENDING;
+      session.history = [...session.history, modelResponse];
 
-  session.state =
-    modelResponse.questions && modelResponse.questions.length > 0
-      ? SessionState.PENDING
-      : SessionState.COMPLETE;
+      session.state =
+        modelResponse.questions && modelResponse.questions.length > 0
+          ? SessionState.PENDING
+          : SessionState.COMPLETE;
 
-  updateSessionData(reqBody.sessionId, session);
+      updateSessionData(reqBody.sessionId, session);
 
-  return res.json({
-    summary: modelResponse?.note,
-    questions: modelResponse?.questions,
-    suggested_dishes: modelResponse?.suggested_dishes,
-    state: session.state,
-  });
-});
+      return res.json({
+        summary: modelResponse?.note,
+        questions: modelResponse?.questions,
+        suggested_dishes: modelResponse?.suggested_dishes,
+        state: session.state,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 /**
  * @openapi
@@ -121,50 +129,57 @@ router.post('/initial', validate(bodySchema), async (req: Request, res: Response
  *       400:
  *         description: validation error
  */
-router.post('/refine', validate(bodySchema), async (req: Request, res: Response) => {
-  const initial: Body = req;
-  const reqBody = initial.body;
+router.post(
+  '/refine',
+  validate(bodySchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const initial: Body = req;
+      const reqBody = initial.body;
 
-  const session = getSessionById(reqBody.sessionId);
-  if (!session) return res.status(404).json({ err: 404, message: 'Session not found.' });
+      const session = getSessionById(reqBody.sessionId);
+      if (!session) throw new AppError(404, 'Session not found.');
 
-  // prepare conversation to be used by model
-  const lastModelResponse = session.history[session.history.length - 1];
-  const conversation: SendMessageToModelArguments[] =
-    session?.formData.flatMap((item) => {
-      const question = lastModelResponse.questions.find(
-        (question) => question.id === item.questionId,
-      );
+      // prepare conversation to be used by model
+      const lastModelResponse = session.history[session.history.length - 1];
+      const conversation: SendMessageToModelArguments[] =
+        session?.formData.flatMap((item) => {
+          const question = lastModelResponse.questions.find(
+            (question) => question.id === item.questionId,
+          );
 
-      return {
-        systemMessage: `System question: ${question?.text ?? ''}. Question category: ${question?.category ?? ''}`,
-        userMessage: item.userAnswer,
-      };
-    }) ?? [];
+          return {
+            systemMessage: `System question: ${question?.text ?? ''}. Question category: ${question?.category ?? ''} `,
+            userMessage: item.userAnswer,
+          };
+        }) ?? [];
 
-  // generate refined note and questions if needed
-  const modelResponse = await generateRefinedNote(conversation, lastModelResponse.note);
-  if (!modelResponse)
-    return res.status(500).json({ err: 500, message: 'Something went wrong on the server.' });
+      // generate refined note and questions if needed
+      const modelResponse = await generateRefinedNote(conversation, lastModelResponse.note);
+      if (!modelResponse) throw new AppError(500, 'Something went wrong on the server.');
 
-  // update session
-  session.summary = { note: modelResponse?.note ?? '' };
-  session.history = [...session.history, modelResponse];
+      // update session
+      session.summary = { note: modelResponse?.note ?? '' };
+      session.history = [...session.history, modelResponse];
 
-  session.state =
-    modelResponse.questions && modelResponse.questions.length > 0
-      ? SessionState.PENDING
-      : SessionState.COMPLETE;
+      session.state =
+        modelResponse.questions && modelResponse.questions.length > 0
+          ? SessionState.PENDING
+          : SessionState.COMPLETE;
 
-  updateSessionData(reqBody.sessionId, session);
+      updateSessionData(reqBody.sessionId, session);
 
-  return res.json({
-    summary: modelResponse.note,
-    questions: modelResponse.questions,
-    suggested_dishes: modelResponse?.suggested_dishes,
-    state: session.state,
-  });
-});
+      return res.json({
+        summary: modelResponse.note,
+        questions: modelResponse.questions,
+        suggested_dishes: modelResponse?.suggested_dishes,
+        state: session.state,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 /**
  * @openapi
@@ -195,64 +210,55 @@ router.post('/refine', validate(bodySchema), async (req: Request, res: Response)
  *       400:
  *         description: validation error
  */
-router.post('/generate-pdf', async (req: Request, res: Response) => {
-  const { sessionId } = req.body; // Cleaner destructuring
-
-  const session = getSessionById(sessionId);
-  if (!session) {
-    return res.status(404).json({ err: 404, message: 'Session not found.' });
-  }
-
-  const lastModelResponse = session.history[session.history.length - 1];
-  const noteInHTML = lastModelResponse?.html;
-
-  if (!noteInHTML) {
-    return res.status(400).json({ err: 400, message: 'No content to generate PDF.' });
-  }
-
-  let browser: Browser | null = null;
-
+router.post('/generate-pdf', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    browser = await puppeteer.launch({
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'], // Added shm usage for Docker
-    });
+    const { sessionId } = req.body;
 
-    const page = await browser.newPage();
+    const session = getSessionById(sessionId);
+    if (!session) throw new AppError(404, 'Session not found.');
 
-    // 1. Set content with a timeout to prevent hanging
-    await page.setContent(noteInHTML, {
-      waitUntil: 'networkidle0',
-      timeout: 30000,
-    });
+    const lastModelResponse = session.history[session.history.length - 1];
+    const noteInHTML = lastModelResponse?.html;
 
-    // 2. Generate Buffer
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' },
-    });
+    if (!noteInHTML) throw new AppError(400, 'No content to generate PDF.');
 
-    // 3. Clear any existing headers and set explicitly
-    res.writeHead(200, {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="generated_note.pdf"',
-      'Content-Length': pdfBuffer.length,
-    });
+    let browser: Browser | null = null;
 
-    // 4. Use end() to send the buffer directly
-    return res.end(pdfBuffer);
+    try {
+      browser = await puppeteer.launch({
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      });
+
+      const page = await browser.newPage();
+
+      await page.setContent(noteInHTML, {
+        waitUntil: 'networkidle0',
+        timeout: 30000,
+      });
+
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' },
+      });
+
+      res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="generated_note.pdf"',
+        'Content-Length': pdfBuffer.length,
+      });
+
+      return res.end(pdfBuffer);
+    } catch (error) {
+      console.error('PDF Generation Error:', error);
+      throw new AppError(500, (error.message ?? 'Error occurred') || 'Failed to generate PDF');
+    } finally {
+      if (browser) await browser.close();
+    }
   } catch (error) {
-    console.error('PDF Generation Error:', error);
-    // Ensure we only send one response
-    if (!res.headersSent) {
-      return res.status(500).json({ error: 'Failed to generate PDF' });
-    }
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
+    next(error);
   }
 });
 

@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import { addNewSessionToDB, Session, SessionState } from '../services/sessionService';
 
@@ -15,18 +15,22 @@ const router = Router();
  *       200:
  *         description: New session id
  */
-router.post('/start', (req: Request, res: Response) => {
-  const newSession: Session = {
-    sessionId: uuid(),
-    formData: [],
-    summary: null,
-    state: SessionState.INITIAL,
-    history: [],
-  };
+router.post('/start', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const newSession: Session = {
+      sessionId: uuid(),
+      formData: [],
+      summary: null,
+      state: SessionState.INITIAL,
+      history: [],
+    };
 
-  const addedSession = addNewSessionToDB(newSession);
+    const addedSession = addNewSessionToDB(newSession);
 
-  res.json({ sessionId: addedSession.sessionId });
+    res.json({ sessionId: addedSession.sessionId });
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

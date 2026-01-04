@@ -62,7 +62,7 @@ export const generateInitialNote = async (conversation: SendMessageToModelArgume
     ...conversationMessages,
   ];
 
-  const modelResponse = sendMessageToModel(messages);
+  const modelResponse = await sendMessageToModel(messages);
   if (!modelResponse) {
     throw new Error('Model not answering');
   }
@@ -107,7 +107,7 @@ export const generateRefinedNote = async (
     ...conversationMessages,
   ];
 
-  const modelResponse = sendMessageToModel(messages);
+  const modelResponse = await sendMessageToModel(messages);
   if (!modelResponse) {
     throw new Error('Model not answering');
   }

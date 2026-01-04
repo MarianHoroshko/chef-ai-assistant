@@ -1,8 +1,9 @@
-import { Router, Request, Response } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import z from 'zod';
 import { getSessionById, SessionState, updateSessionData } from '../services/sessionService';
 import { validate } from '../middlewares/validation';
 import { INTERVIEW_QUESTIONS } from '../agents/chefAgent';
+import { AppError } from '../utils/errors';
 
 const router = Router();
 
@@ -60,20 +61,28 @@ type Step = z.infer<typeof stepSchema>;
  *       400:
  *         description: validation error
  */
-router.post('/step', validate(stepSchema), (req: Request, res: Response) => {
-  const step: Step = req;
-  const reqBody = step.body;
+router.post(
+  '/step',
+  validate(stepSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const step: Step = req;
+      const reqBody = step.body;
 
-  const session = getSessionById(reqBody.sessionId);
-  if (!session) return res.status(404).json({ err: 404, message: 'Session not found.' });
+      const session = getSessionById(reqBody.sessionId);
+      if (!session) throw new AppError(404, 'Session not found.');
 
-  session.formData = [...session.formData, reqBody.data];
-  session.state = SessionState.ACTIVE;
+      session.formData = [...session.formData, reqBody.data];
+      session.state = SessionState.ACTIVE;
 
-  updateSessionData(reqBody.sessionId, session);
+      updateSessionData(reqBody.sessionId, session);
 
-  return res.json({ status: 'ok' });
-});
+      return res.json({ status: 'ok' });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 /**
  * @openapi
@@ -87,14 +96,18 @@ router.post('/step', validate(stepSchema), (req: Request, res: Response) => {
  *       200:
  *         description: return questions
  */
-router.get('/get-questions', (req: Request, res: Response) => {
-  const arrayOfQuestions = Object.keys(INTERVIEW_QUESTIONS).map((key) => ({
-    ...INTERVIEW_QUESTIONS[key as keyof typeof INTERVIEW_QUESTIONS],
-  }));
+router.get('/get-questions', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const arrayOfQuestions = Object.keys(INTERVIEW_QUESTIONS).map((key) => ({
+      ...INTERVIEW_QUESTIONS[key as keyof typeof INTERVIEW_QUESTIONS],
+    }));
 
-  return res.json({
-    questions: arrayOfQuestions,
-  });
+    return res.json({
+      questions: arrayOfQuestions,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;
