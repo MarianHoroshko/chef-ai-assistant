@@ -50,7 +50,7 @@ An intelligent cooking and event-planning assistant that guides you through orga
     make build
 ```
 
-8. Run to run development environment
+8. Run development environment
 
 ```bash
     make up
