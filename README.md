@@ -4,6 +4,11 @@
 
 An intelligent cooking and event-planning assistant that guides you through organizing gatherings and produces well-structured notes along the way.
 
+<img width="1919" height="858" alt="image" src="https://github.com/user-attachments/assets/17d5366a-d68d-441d-81a8-d8f4c9d1717e" />
+
+<img width="1919" height="897" alt="image" src="https://github.com/user-attachments/assets/7607147d-8f45-4a42-823f-3cabc6241a08" />
+
+
 ## How to set up
 
 ### Backend
@@ -47,7 +52,7 @@ An intelligent cooking and event-planning assistant that guides you through orga
     make build
 ```
 
-8. Run to run development environment
+8. Run development environment
 
 ```bash
     make up
