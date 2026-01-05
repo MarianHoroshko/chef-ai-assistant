@@ -46,7 +46,10 @@ export const addNewSessionToDB = (newSession: Session): CreateNewSessionResponse
 };
 
 export const updateSessionData = (sessionId: string, updatedSession: Session) => {
-  _dbInstance.sessions.map((session) =>
-    session.sessionId === sessionId ? updatedSession : session,
+  const sessionIndex = _dbInstance.sessions.findIndex(
+    (session) => session.sessionId === sessionId
   );
+  if (sessionIndex !== -1) {
+    _dbInstance.sessions[sessionIndex] = updatedSession;
+  }
 };

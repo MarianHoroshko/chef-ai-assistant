@@ -78,8 +78,8 @@ router.post(
 
       // update session
       session.summary = { note: modelResponse?.note ?? '' };
-      session.state = SessionState.PENDING;
       session.history = [...session.history, modelResponse];
+      session.formData = []; // Clear form data after processing
 
       session.state =
         modelResponse.questions && modelResponse.questions.length > 0
@@ -142,11 +142,18 @@ router.post(
 
       // prepare conversation to be used by model
       const lastModelResponse = session.history[session.history.length - 1];
+
+      // Build a map of all questions from the entire history
+      const allQuestionsMap = new Map();
+      session.history.forEach(response => {
+        response.questions?.forEach(q => {
+          allQuestionsMap.set(q.id, q);
+        });
+      });
+
       const conversation: SendMessageToModelArguments[] =
         session?.formData.flatMap((item) => {
-          const question = lastModelResponse.questions.find(
-            (question) => question.id === item.questionId,
-          );
+          const question = allQuestionsMap.get(item.questionId);
 
           return {
             systemMessage: `System question: ${question?.text ?? ''}. Question category: ${question?.category ?? ''} `,
@@ -161,6 +168,7 @@ router.post(
       // update session
       session.summary = { note: modelResponse?.note ?? '' };
       session.history = [...session.history, modelResponse];
+      session.formData = []; // Clear form data after processing
 
       session.state =
         modelResponse.questions && modelResponse.questions.length > 0
