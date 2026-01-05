@@ -16,7 +16,12 @@ const ChatPage = () => {
       <VStack className="h-full flex-1 overflow-hidden">
         <Header />
 
-        <ChatArea sessionId={sessionId} conversationItems={conversation} isFetching={isFetching} />
+        <ChatArea
+          sessionId={sessionId}
+          conversationItems={conversation}
+          hasCompleted={state.hasCompleted}
+          isFetching={isFetching}
+        />
 
         <InputArea
           questionId={questions[currentQuestionIndex]?.id ?? ''}

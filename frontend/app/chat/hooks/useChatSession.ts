@@ -1,6 +1,6 @@
 'use client';
 
-import { useReducer, useEffect, useRef, useCallback } from 'react';
+import { useReducer, useEffect, useCallback } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { queries } from '@/queries';
 import { startNewSession } from '@/services/session';
@@ -14,6 +14,7 @@ export type ConversationItem = {
   text?: string;
   category?: string;
   note?: Note;
+  noteState?: string;
 };
 
 type ChatState = {
@@ -74,7 +75,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
         },
       ];
 
-      const isCompleted = action.payload.state === 'completed';
+      const isCompleted = action.payload.state === 'complete';
 
       if (Array.isArray(action.payload.questions) && action.payload.questions.length > 0) {
         const newQuestions: ConversationItem[] = action.payload.questions.map((q) => ({
