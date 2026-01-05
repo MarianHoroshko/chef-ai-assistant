@@ -325,7 +325,7 @@ Your responsibilities are to:
    - Resolves inconsistencies where possible without guessing
 4. Identify any missing, ambiguous, or conflicting details that still require clarification.
 5. Generate clarification or improvement questions that would help finalize or improve the event.
-6. Don't ask same questions you already asked event for clarification.
+6. Don't ask the same questions you already asked.
 7. Suggest appropriate dishes from the provided RAG menu, based strictly on:
    - User answers and stated preferences
    - Dietary restrictions and allergies
