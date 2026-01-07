@@ -23,6 +23,7 @@ router.post('/start', async (req: Request, res: Response, next: NextFunction) =>
       summary: null,
       state: SessionState.INITIAL,
       history: [],
+      submitedAnswers: [],
     };
 
     const addedSession = addNewSessionToDB(newSession);

@@ -61,6 +61,9 @@ router.post(
       const session = getSessionById(reqBody.sessionId);
       if (!session) throw new AppError(404, 'Session not found.');
 
+      // Store submitted answers
+      session.submitedAnswers = [...session.submitedAnswers, ...session.formData];
+
       // prepare conversation to be used by model
       const conversation: SendMessageToModelArguments[] =
         session?.formData.flatMap((item) => {
@@ -140,11 +143,21 @@ router.post(
       const session = getSessionById(reqBody.sessionId);
       if (!session) throw new AppError(404, 'Session not found.');
 
+      // Store submitted answers
+      session.submitedAnswers = [...session.submitedAnswers, ...session.formData];
+
       // prepare conversation to be used by model
       const lastModelResponse = session.history[session.history.length - 1];
 
       // Build a map of all questions from the entire history
       const allQuestionsMap = new Map();
+
+      // Add initial interview questions
+      Object.values(INTERVIEW_QUESTIONS).forEach(q => {
+        allQuestionsMap.set(q.id, q);
+      });
+
+      // Add generated questions from history
       session.history.forEach(response => {
         response.questions?.forEach(q => {
           allQuestionsMap.set(q.id, q);
@@ -152,7 +165,7 @@ router.post(
       });
 
       const conversation: SendMessageToModelArguments[] =
-        session?.formData.flatMap((item) => {
+        session.submitedAnswers.flatMap((item) => {
           const question = allQuestionsMap.get(item.questionId);
 
           return {

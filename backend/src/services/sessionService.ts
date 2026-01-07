@@ -20,6 +20,7 @@ export const sessionSchema = z.object({
     .nullable(),
   state: z.enum(SessionState),
   history: z.array(modelResponseSchema),
+  submitedAnswers: z.array(stepQuestion),
 });
 
 export type Session = z.infer<typeof sessionSchema>;

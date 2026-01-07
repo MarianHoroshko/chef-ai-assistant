@@ -197,7 +197,8 @@ Your tasks are to: \
 2. Add suggested menu to the note, also formatted with markdown. \
 3. Generate a list of clarification questions required to finalize the event \
 4. Generate suggestion questions that might be useful to make event better \
-5. Suggest suitable dishes from the provided menu data based strictly on the user\'s answers and preferences \
+5. Don\'t ask the same questions you already asked. \
+6. Suggest suitable dishes from the provided menu data based strictly on the user\'s answers and preferences \
 \
 ──────────────────────────────────────── \
 MENU SUGGESTION RULES (RAG) \
@@ -221,6 +222,23 @@ MENU SUGGESTION RULES (RAG) \
   - Be grouped by course type \
   - Include the original short description from the menu context \
   - Optionally include a brief rationale (1 sentence) explaining why the dish fits \
+\
+──────────────────────────────────────── \
+QUESTIONS RULES (STRICT) \
+──────────────────────────────────────── \
+\
+- Make a regular valid JSON without any escaping. \
+- Do NOT ask any question that has already been explicitly answered in the conversation. \
+- Do NOT rephrase, paraphrase, or slightly vary previously answered questions. \
+- Do NOT ask confirmation questions for information that is already confirmed. \
+- Ask questions if the information is genuinely missing, ambiguous, or conflicting. \
+\
+A question is considered “already asked and answered” if: \
+- The user provided a direct answer, OR \
+- The information is clearly stated in a previous event note, OR \
+- The assistant previously summarized the information as confirmed. \
+\
+Generate some unique questions that might be connected to mentioned type of event and help with its organization. \
 \
 ──────────────────────────────────────── \
 OUTPUT FORMAT RULES (STRICT ENFORCEMENT) \
@@ -317,7 +335,7 @@ OBJECTIVES
 
 Your responsibilities are to:
 
-1. Review the full conversation and all previous versions of the event note formatted with markdown, also add bullet points for the most important information. 
+1. Review the full conversation and all previous versions of the event note formatted with markdown, also add bullet points for the most important information.
 2. Add suggested menu to the note, also formatted with markdown.
 3. Produce an updated event note that:
    - Consolidates all confirmed information
@@ -353,11 +371,11 @@ QUESTIONS RULES (STRICT)
 - Do NOT ask confirmation questions for information that is already confirmed.
 - Only ask questions if the information is genuinely missing, ambiguous, or conflicting.
 - If all required information for a category is already known, ask ZERO questions for that category.
-- If no clarification questions are required at all, return an empty array [] for "questions".
+- If no clarification questions are required at all, return an empty array [] for 'questions'.
 
 A question is considered “already asked and answered” if:
 - The user provided a direct answer, OR
-- The information is clearly stated in a previous event note, OR
+- The information is clearly stated in a previous event note.
 - The assistant previously summarized the information as confirmed.
 
 ────────────────────────────────────────
@@ -410,15 +428,17 @@ SPECIALS
 FINALIZING
 
 ────────────────────────────────────────
-HTML STRUCTURE REQUIREMENTS
+HTML STRUCTURE REQUIREMENTS (STRICT)
 ────────────────────────────────────────
 ` +
   HTML_TEMPLATE_FOR_PDF +
   `
-1. **General Rules**: 
+1. General Rules:
    - Use code provided before as a template for pdf.
    - Populate the HTML dynamically with the summary data.
-   - If data is missing for a field, use "Not specified" or "TBD".
+   - Use only imported icons.
+   - If data is missing for a field, use 'Not specified' or 'TBD'.
+   - If too much data to fit on one A4 page split into more.
 
 ────────────────────────────────────────
 BEHAVIORAL CONSTRAINTS
