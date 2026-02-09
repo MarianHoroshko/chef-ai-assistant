@@ -8,7 +8,7 @@ import InputArea from './components/input/input-area';
 import { useChatSession } from './hooks/useChatSession';
 
 const ChatPage = () => {
-  const { state, addUserResponse, isFetching } = useChatSession();
+  const { state, addUserResponse, isFetching, isLoading } = useChatSession();
   const { conversation, sessionId, questions, currentQuestionIndex } = state;
 
   return (
@@ -20,6 +20,7 @@ const ChatPage = () => {
           sessionId={sessionId}
           conversationItems={conversation}
           hasCompleted={state.hasCompleted}
+          isLoading={isLoading}
           isFetching={isFetching}
         />
 

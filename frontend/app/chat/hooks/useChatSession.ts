@@ -116,7 +116,7 @@ export const useChatSession = () => {
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const { data: initialQuestionsData } = useQuery(queries.form.questions);
 
-  const { mutate: startNewSessionMutate } = useMutation({
+  const { mutate: startNewSessionMutate, isPending: isPendingNewSession } = useMutation({
     mutationFn: startNewSession,
     onSuccess: (data) => dispatch({ type: 'SET_SESSION_ID', payload: data.sessionId }),
   });
@@ -182,6 +182,7 @@ export const useChatSession = () => {
   return {
     state,
     addUserResponse,
+    isLoading: isPendingNewSession,
     isFetching: isPendingInitial || isPendingRefined,
   };
 };

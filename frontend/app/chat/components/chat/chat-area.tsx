@@ -8,15 +8,23 @@ import { VStack } from '@/components/ui/vstack';
 import EventSummaryCard from '../summary-card/summary-card';
 import LoadingMessage from './loading-message';
 import { ConversationItem } from '../../hooks/useChatSession';
+import { Spinner } from '@/components/ui/spinner';
 
 type ChatAreaProps = {
   sessionId: string;
   conversationItems: ConversationItem[];
   hasCompleted: boolean;
+  isLoading: boolean;
   isFetching?: boolean;
 };
 
-const ChatArea = ({ sessionId, conversationItems, hasCompleted, isFetching }: ChatAreaProps) => {
+const ChatArea = ({
+  sessionId,
+  conversationItems,
+  hasCompleted,
+  isLoading,
+  isFetching,
+}: ChatAreaProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -31,6 +39,12 @@ const ChatArea = ({ sessionId, conversationItems, hasCompleted, isFetching }: Ch
 
   return (
     <Box className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
+      {isLoading && (
+        <VStack className="h-full w-full items-center justify-center">
+          <Spinner size="large" color="green" />
+        </VStack>
+      )}
+
       {conversationItems?.map((conversationItem) => (
         <VStack key={conversationItem.id} className="mx-auto mb-8 w-full max-w-3xl flex-shrink-0">
           {conversationItem.role === 'assistant' && conversationItem.type === 'note' && (
